@@ -3,6 +3,7 @@ package app.sharma.changecity;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -14,6 +15,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -26,13 +28,17 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     String apiKey = "AIzaSyAF0I5ji4MMQ3n1Bp5lQ68Ge7RD74uMfU0";
-
-    protected static final String TAG = "LocationOnOff";
 
     private GoogleApiClient googleApiClient;
     final static int REQUEST_LOCATION = 199;
@@ -40,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     Button button;
 
     Dialog myDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
 
                 myDialog.setContentView(R.layout.custom_popup);
 
+                Places.initialize(getApplicationContext(), apiKey);
+
                 txtclose = (Button) myDialog.findViewById(R.id.txtclose);
                 btnChange = (Button) myDialog.findViewById(R.id.btnChange);
                 curCity = (TextView) myDialog.findViewById(R.id.currentCity);
@@ -76,22 +85,25 @@ public class MainActivity extends AppCompatActivity {
                         // Todo Location Already on  ... start
                         final LocationManager manager = (LocationManager) MainActivity.this.getSystemService(Context.LOCATION_SERVICE);
                         if (manager.isProviderEnabled(LocationManager.GPS_PROVIDER) && hasGPSDevice(MainActivity.this)) {
-                            Toast.makeText(MainActivity.this,"Gps already enabled",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Gps already enabled", Toast.LENGTH_SHORT).show();
                         }
                         // Todo Location Already on  ... end
 
-                        if(!hasGPSDevice(MainActivity.this)){
-                            Toast.makeText(MainActivity.this,"Gps not Supported",Toast.LENGTH_SHORT).show();
+                        if (!hasGPSDevice(MainActivity.this)) {
+                            Toast.makeText(MainActivity.this, "Gps not Supported", Toast.LENGTH_SHORT).show();
                         }
 
                         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER) && hasGPSDevice(MainActivity.this)) {
-                            Log.e("keshav","Gps already enabled");
-                            Toast.makeText(MainActivity.this,"Gps not enabled",Toast.LENGTH_SHORT).show();
+                            Log.e("keshav", "Gps already enabled");
+                            Toast.makeText(MainActivity.this, "Gps not enabled", Toast.LENGTH_SHORT).show();
                             enableLoc();
-                        }else{
-                            Log.e("keshav","Gps already enabled");
-                            Toast.makeText(MainActivity.this,"Gps already enabled", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.e("log: ", "Gps already enabled");
+                            Toast.makeText(MainActivity.this, "Gps already enabled", Toast.LENGTH_SHORT).show();
                         }
+
+                        //TODO: show current location in the name and the list population of the locations...
+                        searchPlaces();
 
                     }
                 });
@@ -99,6 +111,28 @@ public class MainActivity extends AppCompatActivity {
                 myDialog.show();
             }
         });
+    }
+
+    private void searchPlaces() {
+
+        List<Place.Field> fieldList = Arrays.asList(Place.Field.ADDRESS,
+                Place.Field.LAT_LNG,
+                Place.Field.NAME);
+        Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fieldList).build(MainActivity.this);
+        startActivityForResult(intent, 100);
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 100 && resultCode == RESULT_OK){
+            Place place = Autocomplete.getPlaceFromIntent(data);
+
+            Toast.makeText(this, place.getName(), Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     private boolean hasGPSDevice(Context context) {
@@ -169,5 +203,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
+
 
 }
