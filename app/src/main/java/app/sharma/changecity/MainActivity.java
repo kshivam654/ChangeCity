@@ -31,22 +31,19 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    String apiKey = "AIzaSyAF0I5ji4MMQ3n1Bp5lQ68Ge7RD74uMfU0";
-
-    private GoogleApiClient googleApiClient;
     final static int REQUEST_LOCATION = 199;
-
+    String apiKey2 = "AIzaSyAIdEV_8KLMXqfo_LsIROU4yUBPt4GH0cU";
     Button button;
-
+    TextView curCity;
     Dialog myDialog;
-
+    private GoogleApiClient googleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,16 +59,18 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Button txtclose;
                 Button btnChange;
-                TextView curCity;
 
                 myDialog.setContentView(R.layout.custom_popup);
 
-                Places.initialize(getApplicationContext(), apiKey);
+                Places.initialize(getApplicationContext(), String.valueOf(R.string.api_key));
 
                 txtclose = (Button) myDialog.findViewById(R.id.txtclose);
                 btnChange = (Button) myDialog.findViewById(R.id.btnChange);
                 curCity = (TextView) myDialog.findViewById(R.id.currentCity);
                 txtclose.setText("OK");
+
+                //TODO: to already know users current city
+
                 txtclose.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -85,25 +84,27 @@ public class MainActivity extends AppCompatActivity {
                         // Todo Location Already on  ... start
                         final LocationManager manager = (LocationManager) MainActivity.this.getSystemService(Context.LOCATION_SERVICE);
                         if (manager.isProviderEnabled(LocationManager.GPS_PROVIDER) && hasGPSDevice(MainActivity.this)) {
-                            Toast.makeText(MainActivity.this, "Gps already enabled", Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(MainActivity.this, "Gps already enabled", Toast.LENGTH_SHORT).show();
                         }
                         // Todo Location Already on  ... end
 
                         if (!hasGPSDevice(MainActivity.this)) {
-                            Toast.makeText(MainActivity.this, "Gps not Supported", Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(MainActivity.this, "Gps not Supported", Toast.LENGTH_SHORT).show();
                         }
 
                         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER) && hasGPSDevice(MainActivity.this)) {
-                            Log.e("keshav", "Gps already enabled");
-                            Toast.makeText(MainActivity.this, "Gps not enabled", Toast.LENGTH_SHORT).show();
+                            Log.e("keshav", "Gps already enabled ");
+//                            Toast.makeText(MainActivity.this, "Gps not enabled", Toast.LENGTH_SHORT).show();
                             enableLoc();
                         } else {
                             Log.e("log: ", "Gps already enabled");
-                            Toast.makeText(MainActivity.this, "Gps already enabled", Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(MainActivity.this, "Gps already enabled", Toast.LENGTH_SHORT).show();
                         }
+
 
                         //TODO: show current location in the name and the list population of the locations...
                         searchPlaces();
+
 
                     }
                 });
@@ -112,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
 
     private void searchPlaces() {
 
@@ -127,11 +129,18 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == 100 && resultCode == RESULT_OK){
+        if (requestCode == 100 && resultCode == RESULT_OK) {
             Place place = Autocomplete.getPlaceFromIntent(data);
 
-            Toast.makeText(this, place.getName(), Toast.LENGTH_SHORT).show();
+            Log.d("Search Places", "Place: " + place.getName() + ", " + place.getId());
+        } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+            // TODO: Handle the error.
+            Status status = Autocomplete.getStatusFromIntent(data);
+            Log.i("Search Places", status.getStatusMessage());
+        } else if (resultCode == RESULT_CANCELED) {
+            // The user canceled the operation.
         }
+        return;
 
     }
 
@@ -166,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onConnectionFailed(ConnectionResult connectionResult) {
 
-                            Log.d("Location error","Location error " + connectionResult.getErrorCode());
+                            Log.d("Location error", "Location error " + connectionResult.getErrorCode());
                         }
                     }).build();
             googleApiClient.connect();
